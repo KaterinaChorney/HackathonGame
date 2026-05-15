@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using HackathonGame.ScoresService.Data;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -41,6 +46,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<HackathonGame.ScoresService.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
 app.MapControllers();
 

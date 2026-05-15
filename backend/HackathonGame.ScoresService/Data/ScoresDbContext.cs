@@ -27,8 +27,7 @@ public class ScoresDbContext : DbContext
         {
             e.HasOne(b => b.Score)
              .WithMany(s => s.Badges)
-             .HasForeignKey(b => b.TeamId)
-             .HasPrincipalKey(s => s.TeamId)
+             .HasForeignKey(b => b.ScoreId)
              .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -29,6 +29,9 @@ public class Badge
     [Column("awarded_at")]
     public DateTime AwardedAt { get; set; } = DateTime.UtcNow;
 
-    [ForeignKey("TeamId")]
+    [Column("score_id")]
+    public long ScoreId { get; set; }
+
+    [ForeignKey("ScoreId")]
     public Score? Score { get; set; }
 }
