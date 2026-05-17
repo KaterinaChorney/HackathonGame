@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: scores_password
       POSTGRES_DB: hackathon_scores
     ports:
-      - "5437:5432" # Використовуємо порт 5437, щоб не конфліктувати з тим, що у тебе вже запущено на 5436
+      - "5437:5432"
     volumes:
       - postgres_scores_data:/var/lib/postgresql/data
     restart: unless-stopped

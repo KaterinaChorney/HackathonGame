@@ -15,6 +15,7 @@ export default function AdminScoresPage() {
   const [scores, setScores] = useState([])
   const [badgeTypes, setBadgeTypes] = useState([])
   const [forms, setForms] = useState([])
+  const [drawnCards, setDrawnCards] = useState([])
   const [msg, setMsg] = useState('')
 
   // Score form
@@ -22,6 +23,7 @@ export default function AdminScoresPage() {
   const [round, setRound] = useState(1)
   const [points, setPoints] = useState('')
   const [reason, setReason] = useState('')
+  const [cardId, setCardId] = useState('')
 
   // Badge form
   const [badgeTeamId, setBadgeTeamId] = useState('')
@@ -44,13 +46,27 @@ export default function AdminScoresPage() {
     } catch (e) { console.error(e) }
   }
 
+  // Load cards from P2 whenever activeSession or round changes
+  useEffect(() => {
+    const loadCards = async () => {
+      if (!activeSession || !round) return
+      import('../services/cardsApi').then(({ default: cardsApi }) => {
+        cardsApi.getRoundSummary(activeSession, round).then(data => {
+          setDrawnCards(data || [])
+        })
+      })
+    }
+    loadCards()
+  }, [activeSession, round])
+
   const showMsg = (text) => { setMsg(text); setTimeout(() => setMsg(''), 3000) }
 
   const addScore = async (tid, pts, rsn) => {
     try {
-      await scoresApi.addScore(activeSession, tid, { round, points: pts, reason: rsn || reason })
+      await scoresApi.addScore(activeSession, tid, { round, points: pts, reason: rsn || reason, cardId: cardId || undefined })
       showMsg(`✅ ${pts > 0 ? '+' : ''}${pts} балів для команди #${tid}`)
       loadSession()
+      setCardId('')
     } catch (e) { showMsg('❌ Помилка') }
   }
 
@@ -106,8 +122,19 @@ export default function AdminScoresPage() {
                 <input className="input-cyber w-24" placeholder="Бали" type="number"
                        value={points} onChange={e => setPoints(e.target.value)} />
               </div>
-              <input className="input-cyber" placeholder="Причина"
-                     value={reason} onChange={e => setReason(e.target.value)} />
+              <div className="flex gap-2">
+                <input className="input-cyber flex-1" placeholder="Причина"
+                       value={reason} onChange={e => setReason(e.target.value)} />
+                <select className="input-cyber w-48 text-sm"
+                        value={cardId} onChange={e => setCardId(e.target.value)}>
+                  <option value="">Без картки</option>
+                  {drawnCards.map(c => (
+                    <option key={c.cardId} value={c.cardId}>
+                      [Команда #{c.teamId}] {c.cardNameUa}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex gap-2 flex-wrap">
                 {QUICK_POINTS.map(qp => (
                   <button key={qp.value}

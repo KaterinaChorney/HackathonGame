@@ -8,10 +8,8 @@ export default function Crazy8sPage() {
   const [formId, setFormId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [timerRunning, setTimerRunning] = useState(false)
   const [timeLeft, setTimeLeft] = useState(480) // 8 minutes
   const [activeBlock, setActiveBlock] = useState(0)
-  const timerRef = useRef(null)
   const saveTimerRef = useRef(null)
 
   useEffect(() => {
@@ -27,23 +25,28 @@ export default function Crazy8sPage() {
   }, [sessionId, teamId])
 
   useEffect(() => {
-    if (!timerRunning) return
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 0) {
-          setTimerRunning(false)
-          clearInterval(interval)
-          return 0
+    import('../services/sessionHubService').then(({ default: sessionHubService }) => {
+      sessionHubService.startConnection(sessionId)
+      
+      const handleTimerTick = ({ remaining }) => {
+        setTimeLeft(remaining)
+        // If remaining is 480, elapsed is 0 -> block 0.
+        // Every 60s elapsed moves to next block.
+        const elapsed = 480 - remaining
+        if (elapsed >= 0) {
+          const newBlock = Math.min(Math.floor(elapsed / 60), 7)
+          setActiveBlock(prev => newBlock !== prev ? newBlock : prev)
         }
-        // Switch block every 60 seconds
-        const elapsed = 480 - prev + 1
-        const newBlock = Math.min(Math.floor(elapsed / 60), 7)
-        if (newBlock !== activeBlock) setActiveBlock(newBlock)
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [timerRunning])
+      }
+
+      sessionHubService.onTimerTick(handleTimerTick)
+
+      return () => {
+        sessionHubService.offTimerTick(handleTimerTick)
+        sessionHubService.stopConnection()
+      }
+    })
+  }, [sessionId])
 
   const updateIdea = (idx, field, value) => {
     const newIdeas = [...ideas]
@@ -103,19 +106,9 @@ export default function Crazy8sPage() {
           Блок {activeBlock + 1}/8 · {blockTimeFormatted}
         </div>
         <div className="flex gap-2 justify-center">
-          {!timerRunning ? (
-            <button className="btn-neon text-sm px-4 py-2" onClick={() => setTimerRunning(true)}>
-              ▶ Старт
-            </button>
-          ) : (
-            <button className="btn-neon-pink text-sm px-4 py-2" onClick={() => setTimerRunning(false)}>
-              ⏸ Пауза
-            </button>
-          )}
-          <button className="text-sm px-4 py-2 border border-gray-600 text-gray-400 rounded-lg hover:text-white"
-                  onClick={() => { setTimerRunning(false); setTimeLeft(480); setActiveBlock(0) }}>
-            ↻ Скинути
-          </button>
+          <span className="text-xs border border-neon-pink/30 px-3 py-1 rounded text-neon-pink bg-neon-pink/10">
+            Таймер синхронізовано з ведучим (P1)
+          </span>
         </div>
       </div>
 
@@ -124,7 +117,7 @@ export default function Crazy8sPage() {
         {ideas.map((idea, idx) => (
           <div key={idx}
                className={`card-cyber p-3 transition-all duration-300 cursor-pointer ${
-                 idx === activeBlock && timerRunning
+                 idx === activeBlock
                    ? 'border-neon-pink shadow-neon-pink ring-1 ring-neon-pink'
                    : ''
                }`}

@@ -32,8 +32,34 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     if (!activeSession) return
-    const interval = setInterval(() => loadLeaderboard(activeSession), 5000)
-    return () => clearInterval(interval)
+    
+    // Initial load
+    loadLeaderboard(activeSession)
+
+    // Setup SignalR
+    import('../services/signalrService').then(({ default: signalrService }) => {
+      signalrService.startConnection(activeSession)
+      
+      const handleScoreUpdate = (updatedScore) => {
+        setScores(prevScores => {
+          const newScores = [...prevScores]
+          const index = newScores.findIndex(s => s.teamId === updatedScore.teamId)
+          if (index >= 0) {
+            newScores[index] = updatedScore
+          } else {
+            newScores.push(updatedScore)
+          }
+          return newScores.sort((a, b) => b.totalScore - a.totalScore)
+        })
+      }
+
+      signalrService.onScoreUpdate(handleScoreUpdate)
+
+      return () => {
+        signalrService.offScoreUpdate(handleScoreUpdate)
+        signalrService.stopConnection()
+      }
+    })
   }, [activeSession])
 
   return (

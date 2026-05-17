@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using HackathonGame.ScoresService.Data;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using HackathonGame.ScoresService.Services;
+using HackathonGame.ScoresService.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,12 +22,25 @@ builder.Services.AddControllers()
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Services
+builder.Services.AddHttpClient<ICardsIntegrationService, CardsIntegrationService>(client =>
+{
+    var baseUrl = builder.Configuration.GetValue<string>("CardsService:BaseUrl");
+    if (!string.IsNullOrEmpty(baseUrl))
+    {
+        client.BaseAddress = new Uri(baseUrl);
+    }
+});
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Scores & Forms Service API", Version = "v1" });
 });
+
+// SignalR
+builder.Services.AddSignalR();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -34,7 +49,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3003", "http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -49,6 +65,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<HackathonGame.ScoresService.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
 app.MapControllers();
+app.MapHub<LeaderboardHub>("/hubs/leaderboard");
 
 // Auto-migrate
 using (var scope = app.Services.CreateScope())

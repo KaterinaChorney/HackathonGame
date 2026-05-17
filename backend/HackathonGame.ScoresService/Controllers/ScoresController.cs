@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using HackathonGame.ScoresService.Data;
 using HackathonGame.ScoresService.Models;
 using HackathonGame.ScoresService.DTOs;
+using HackathonGame.ScoresService.Services;
+using Microsoft.AspNetCore.SignalR;
+using HackathonGame.ScoresService.Hubs;
 
 namespace HackathonGame.ScoresService.Controllers;
 
@@ -11,7 +14,15 @@ namespace HackathonGame.ScoresService.Controllers;
 public class ScoresController : ControllerBase
 {
     private readonly ScoresDbContext _db;
-    public ScoresController(ScoresDbContext db) => _db = db;
+    private readonly ICardsIntegrationService _cardsIntegrationService;
+    private readonly IHubContext<LeaderboardHub> _hubContext;
+
+    public ScoresController(ScoresDbContext db, ICardsIntegrationService cardsIntegrationService, IHubContext<LeaderboardHub> hubContext)
+    {
+        _db = db;
+        _cardsIntegrationService = cardsIntegrationService;
+        _hubContext = hubContext;
+    }
 
     // GET /api/scores/{sessionId} — Leaderboard
     [HttpGet("{sessionId}")]
@@ -71,7 +82,21 @@ public class ScoresController : ControllerBase
         score.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return Ok(MapScore(score));
+        if (!string.IsNullOrEmpty(request.CardId))
+        {
+            await _cardsIntegrationService.SendFeedbackAsync(
+                sessionId, 
+                teamId, 
+                request.CardId, 
+                request.Round, 
+                request.Points, 
+                request.Reason);
+        }
+
+        var responseScore = MapScore(score);
+        await _hubContext.Clients.Group(sessionId).SendAsync("ReceiveScoreUpdate", responseScore);
+
+        return Ok(responseScore);
     }
 
     // GET /api/scores/{sessionId}/history — All score history

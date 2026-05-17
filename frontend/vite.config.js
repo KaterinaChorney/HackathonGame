@@ -12,6 +12,10 @@ export default defineConfig({
         target: backendUrl,
         changeOrigin: true,
       },
+      '/hubs': {
+        target: backendUrl,
+        ws: true,
+      },
     },
   },
 })
