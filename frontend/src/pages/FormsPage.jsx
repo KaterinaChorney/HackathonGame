@@ -19,7 +19,18 @@ export default function FormsPage() {
     const t = urlTeam || localStorage.getItem('hackathon_teamId') || ''
     setSessionId(s)
     setTeamId(t)
-  }, [])
+    
+    if (s && t) {
+      setLoading(true)
+      formsApi.getTeamForms(s, t)
+        .then(res => {
+          setForms(res.data)
+          setLoaded(true)
+        })
+        .catch(e => console.error(e))
+        .finally(() => setLoading(false))
+    }
+  }, [searchParams])
 
   const loadForms = async () => {
     if (!sessionId || !teamId) return
@@ -33,8 +44,8 @@ export default function FormsPage() {
   }
 
   const FORM_TYPES = [
-    { type: 'PROBLEM_CANVAS', name: 'Problem Canvas', icon: '🧩', desc: 'Визначте проблему, цільового користувача та поточні рішення', route: 'canvas' },
-    { type: 'CRAZY_8S', name: 'Crazy 8s', icon: '🎨', desc: '8 ідей за 8 хвилин — швидка генерація концепцій', route: 'crazy8s' },
+    { type: 'PROBLEM_CANVAS', name: 'Problem Canvas', desc: 'Визначте проблему, цільового користувача та поточні рішення', route: 'canvas' },
+    { type: 'CRAZY_8S', name: 'Crazy 8s', desc: '8 ідей за 8 хвилин — швидка генерація концепцій', route: 'crazy8s' },
   ]
 
   return (
@@ -63,7 +74,6 @@ export default function FormsPage() {
             return (
               <div key={ft.type} className="card-cyber hover:border-neon-pink/50 cursor-pointer group"
                    onClick={() => navigate(`/forms/${ft.route}/${sessionId}/${teamId}`)}>
-                <div className="text-4xl mb-3">{ft.icon}</div>
                 <h3 className="font-cyber text-lg text-neon-pink mb-2 group-hover:text-neon-cyan transition-colors">
                   {ft.name}
                 </h3>

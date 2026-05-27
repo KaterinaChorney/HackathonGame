@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import scoresApi from '../services/scoresApi'
 
-const BADGE_ICONS = {
-  innovator: '💡', speedster: '⚡', presenter: '🎤', teamwork: '🤝',
-  problem_solver: '🧩', creative: '🎨', survivor: '🛡️', mvp: '🏆'
+const BADGE_NAMES = {
+  innovator: 'Інноватор', speedster: 'Швидкий', presenter: 'Оратор', teamwork: 'Команда',
+  problem_solver: 'Аналітик', creative: 'Креатив', survivor: 'Виживач', mvp: 'MVP'
 }
 
 export default function TeamScorePage() {
@@ -52,10 +52,13 @@ export default function TeamScorePage() {
       <div className="card-cyber text-center animate-pulse-glow max-w-sm mx-auto">
         <div className="text-sm text-gray-400 mb-2">Загальний бал</div>
         <div className="font-cyber text-5xl text-neon-cyan">{score?.totalScore || 0}</div>
-        <div className="flex gap-2 justify-center mt-4">
+        <div className="flex flex-wrap gap-2 justify-center mt-4">
           {score?.badges?.map((b, i) => (
-            <span key={i} className="bg-cyber-dark px-3 py-1 rounded-full text-sm border border-cyber-border">
-              {BADGE_ICONS[b.badgeType] || '🏅'} {b.badgeType}
+            <span key={i} className="px-2.5 py-1 rounded text-xs bg-neon-pink/15 text-neon-pink border border-neon-pink/30 uppercase tracking-widest font-semibold font-mono flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 mr-1.5 text-neon-pink animate-pulse" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              </svg>
+              {BADGE_NAMES[b.badgeType] || b.badgeType}
             </span>
           ))}
         </div>

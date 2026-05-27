@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using HackathonGame.ScoresService.Data;
 using HackathonGame.ScoresService.Models;
 using HackathonGame.ScoresService.DTOs;
+using Microsoft.AspNetCore.SignalR;
+using HackathonGame.ScoresService.Hubs;
 
 namespace HackathonGame.ScoresService.Controllers;
 
@@ -11,7 +13,13 @@ namespace HackathonGame.ScoresService.Controllers;
 public class BadgesController : ControllerBase
 {
     private readonly ScoresDbContext _db;
-    public BadgesController(ScoresDbContext db) => _db = db;
+    private readonly IHubContext<LeaderboardHub> _hubContext;
+
+    public BadgesController(ScoresDbContext db, IHubContext<LeaderboardHub> hubContext)
+    {
+        _db = db;
+        _hubContext = hubContext;
+    }
 
     private static readonly List<BadgeTypeInfo> BadgeTypes = new()
     {
@@ -51,16 +59,6 @@ public class BadgesController : ControllerBase
         var badgeType = BadgeTypes.FirstOrDefault(bt => bt.Type == request.BadgeType);
         int bonusPoints = request.BonusPoints > 0 ? request.BonusPoints : (badgeType?.DefaultPoints ?? 5);
 
-        var badge = new Badge
-        {
-            SessionId = sessionId,
-            TeamId = teamId,
-            BadgeType = request.BadgeType,
-            BonusPoints = bonusPoints,
-            AwardedAt = DateTime.UtcNow
-        };
-        _db.Badges.Add(badge);
-
         // Also add bonus points to score
         var score = await _db.Scores
             .FirstOrDefaultAsync(s => s.SessionId == sessionId && s.TeamId == teamId);
@@ -71,6 +69,17 @@ public class BadgesController : ControllerBase
             _db.Scores.Add(score);
             await _db.SaveChangesAsync();
         }
+
+        var badge = new Badge
+        {
+            SessionId = sessionId,
+            TeamId = teamId,
+            BadgeType = request.BadgeType,
+            BonusPoints = bonusPoints,
+            AwardedAt = DateTime.UtcNow,
+            ScoreId = score.Id // Fixed: set correct foreign key
+        };
+        _db.Badges.Add(badge);
 
         score.TotalScore += bonusPoints;
         score.UpdatedAt = DateTime.UtcNow;
@@ -87,6 +96,34 @@ public class BadgesController : ControllerBase
         _db.ScoreHistory.Add(history);
 
         await _db.SaveChangesAsync();
+
+        // Broadcast real-time score update with newly awarded badges
+        var updatedScore = await _db.Scores
+            .Include(s => s.Badges)
+            .FirstOrDefaultAsync(s => s.Id == score.Id);
+
+        if (updatedScore != null)
+        {
+            var responseScore = new ScoreResponse
+            {
+                Id = updatedScore.Id,
+                SessionId = updatedScore.SessionId,
+                TeamId = updatedScore.TeamId,
+                TotalScore = updatedScore.TotalScore,
+                UpdatedAt = updatedScore.UpdatedAt,
+                Badges = updatedScore.Badges.Select(b => new BadgeResponse
+                {
+                    Id = b.Id,
+                    SessionId = b.SessionId,
+                    TeamId = b.TeamId,
+                    BadgeType = b.BadgeType,
+                    BonusPoints = b.BonusPoints,
+                    AwardedAt = b.AwardedAt
+                }).ToList()
+            };
+            await _hubContext.Clients.Group(sessionId).SendAsync("ReceiveScoreUpdate", responseScore);
+        }
+
         return Ok(MapBadge(badge));
     }
 

@@ -76,11 +76,21 @@ export default function ReportPage() {
           <div className="card-cyber">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-cyber text-lg text-neon-cyan">ФІНАЛЬНИЙ РЕЙТИНГ</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <a href={scoresApi.exportLeaderboardCsv(sessionId)}
-                   className="text-sm text-neon-pink hover:underline" download>📥 CSV</a>
+                   className="text-xs text-neon-pink hover:underline flex items-center gap-1 font-mono uppercase tracking-wider" download>
+                  <svg className="w-3.5 h-3.5 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  CSV Рейтинг
+                </a>
                 <a href={scoresApi.exportHistoryCsv(sessionId)}
-                   className="text-sm text-neon-cyan hover:underline" download>📥 Історія</a>
+                   className="text-xs text-neon-cyan hover:underline flex items-center gap-1 font-mono uppercase tracking-wider" download>
+                  <svg className="w-3.5 h-3.5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  CSV Історія
+                </a>
               </div>
             </div>
             <table className="w-full text-sm">
@@ -97,15 +107,20 @@ export default function ReportPage() {
                   <tr key={s.teamId} className={`border-b border-cyber-border/50 ${
                     idx === 0 ? 'bg-yellow-400/5' : ''
                   }`}>
-                    <td className="py-2 font-cyber">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}</td>
+                    <td className="py-2 font-cyber font-semibold text-neon-cyan">#{idx + 1}</td>
                     <td className="py-2">Команда #{s.teamId}</td>
                     <td className="py-2 font-cyber text-neon-cyan">{s.totalScore}</td>
                     <td className="py-2">
-                      {s.badges?.map((b, i) => (
-                        <span key={i} className="mr-1 text-xs px-2 py-0.5 bg-neon-pink/10 text-neon-pink rounded">
-                          {b.badgeType}
-                        </span>
-                      ))}
+                      <div className="flex flex-wrap gap-1">
+                        {s.badges?.map((b, i) => (
+                          <span key={i} className="px-1.5 py-0.5 rounded text-[10px] bg-neon-pink/15 text-neon-pink border border-neon-pink/30 uppercase tracking-wider font-semibold font-mono flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 mr-1 text-neon-pink animate-pulse" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                            </svg>
+                            {b.badgeType}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -135,11 +150,11 @@ export default function ReportPage() {
               <h2 className="font-cyber text-lg text-neon-pink mb-4">ВИДАНІ БЕЙДЖІ</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {badges.map(b => (
-                  <div key={b.id} className="bg-cyber-dark p-3 rounded-lg border border-neon-pink/20 text-center">
-                    <div className="text-2xl mb-1">🏅</div>
-                    <div className="text-sm font-semibold">{b.badgeType}</div>
-                    <div className="text-xs text-gray-400">Команда #{b.teamId}</div>
-                    <div className="text-xs text-neon-green mt-1">+{b.bonusPoints}</div>
+                  <div key={b.id} className="bg-cyber-dark p-3 rounded-lg border border-neon-pink/30 text-center">
+                    <div className="text-xs font-mono uppercase tracking-widest text-neon-pink mb-1">Бейдж</div>
+                    <div className="text-sm font-semibold uppercase font-cyber text-white">{b.badgeType}</div>
+                    <div className="text-xs text-gray-400 mt-1">Команда #{b.teamId}</div>
+                    <div className="text-xs text-neon-green mt-2 font-mono font-bold">+{b.bonusPoints} балів</div>
                   </div>
                 ))}
               </div>

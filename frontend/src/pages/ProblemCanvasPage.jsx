@@ -3,11 +3,11 @@ import { useParams, Link } from 'react-router-dom'
 import formsApi from '../services/formsApi'
 
 const SECTIONS = [
-  { key: 'targetUser', label: 'Target User', icon: '👤', placeholder: 'Хто ваш цільовий користувач? Опишіть його характеристики, демографію...' },
-  { key: 'painPoint', label: 'Pain Point', icon: '😣', placeholder: 'Яка больова точка? Що саме не влаштовує користувача?' },
-  { key: 'currentSolutions', label: 'Current Solutions', icon: '🔧', placeholder: 'Які рішення існують зараз? Чому вони не задовольняють?' },
-  { key: 'workarounds', label: 'Workarounds', icon: '🔄', placeholder: 'Як користувачі обходять проблему? Тимчасові рішення?' },
-  { key: 'scale', label: 'Scale', icon: '📊', placeholder: 'Який масштаб проблеми? Скільки людей стикаються? Ринок?' },
+  { key: 'targetUser', label: 'Target User', placeholder: 'Хто ваш цільовий користувач? Опишіть його характеристики, демографію...' },
+  { key: 'painPoint', label: 'Pain Point', placeholder: 'Яка больова точка? Що саме не влаштовує користувача?' },
+  { key: 'currentSolutions', label: 'Current Solutions', placeholder: 'Які рішення існують зараз? Чому вони не задовольняють?' },
+  { key: 'workarounds', label: 'Workarounds', placeholder: 'Як користувачі обходять проблему? Тимчасові рішення?' },
+  { key: 'scale', label: 'Scale', placeholder: 'Який масштаб проблеми? Скільки людей стикаються? Ринок?' },
 ]
 
 export default function ProblemCanvasPage() {
@@ -27,6 +27,7 @@ export default function ProblemCanvasPage() {
       } catch (e) {
         // Form doesn't exist yet
         setData({})
+        setFormId(null)
       }
     }
     load()
@@ -82,7 +83,6 @@ export default function ProblemCanvasPage() {
                className={`card-cyber animate-fade-in ${idx === 4 ? 'md:col-span-2' : ''}`}
                style={{ animationDelay: `${idx * 0.1}s` }}>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">{section.icon}</span>
               <h3 className="font-cyber text-sm text-neon-cyan">{section.label}</h3>
             </div>
             <textarea
@@ -96,8 +96,11 @@ export default function ProblemCanvasPage() {
       </div>
 
       <div className="text-center">
-        <button className="btn-neon-pink" onClick={() => autoSave(data)}>
-          💾 Зберегти
+        <button className="btn-neon-pink flex items-center justify-center gap-2 mx-auto uppercase tracking-widest font-cyber text-xs" onClick={() => autoSave(data)}>
+          <svg className="w-4 h-4 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+          </svg>
+          Зберегти
         </button>
       </div>
     </div>

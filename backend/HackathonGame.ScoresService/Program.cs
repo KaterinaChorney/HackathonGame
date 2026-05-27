@@ -47,7 +47,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3003", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003", "http://localhost:3004")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -64,6 +64,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<HackathonGame.ScoresService.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
+app.UseMiddleware<HackathonGame.ScoresService.Middleware.AdminAuthMiddleware>();
 app.MapControllers();
 app.MapHub<LeaderboardHub>("/hubs/leaderboard");
 

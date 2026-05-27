@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import scoresApi from '../services/scoresApi'
 
-const BADGE_ICONS = {
-  innovator: '💡', speedster: '⚡', presenter: '🎤', teamwork: '🤝',
-  problem_solver: '🧩', creative: '🎨', survivor: '🛡️', mvp: '🏆'
+const BADGE_NAMES = {
+  innovator: 'Інноватор', speedster: 'Швидкий', presenter: 'Оратор', teamwork: 'Команда',
+  problem_solver: 'Аналітик', creative: 'Креатив', survivor: 'Виживач', mvp: 'MVP'
 }
 
 const RANK_STYLES = [
@@ -85,10 +85,13 @@ export default function LeaderboardPage() {
       {activeSession && (
         <div className="text-center text-sm text-gray-500">
           Сесія: <span className="text-neon-cyan font-mono">{activeSession}</span>
-          <span className="ml-4">
+          <span className="ml-4 inline-flex items-center">
             <a href={scoresApi.exportLeaderboardCsv(activeSession)}
-               className="text-neon-pink hover:underline" download>
-              📥 CSV
+               className="text-neon-pink hover:underline flex items-center gap-1" download>
+              <svg className="w-3.5 h-3.5 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              CSV
             </a>
           </span>
         </div>
@@ -119,10 +122,13 @@ export default function LeaderboardPage() {
                     className="text-lg font-semibold hover:text-neon-cyan transition-colors">
                 Команда #{score.teamId}
               </Link>
-              <div className="flex gap-1 mt-1">
+              <div className="flex flex-wrap gap-1 mt-1.5">
                 {score.badges?.map((b, i) => (
-                  <span key={i} title={b.badgeType} className="text-lg">
-                    {BADGE_ICONS[b.badgeType] || '🏅'}
+                  <span key={i} title={b.badgeType} className="px-2 py-0.5 rounded text-[10px] bg-neon-pink/15 text-neon-pink border border-neon-pink/30 uppercase tracking-wider font-semibold font-mono flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 mr-1 text-neon-pink animate-pulse" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                    {BADGE_NAMES[b.badgeType] || b.badgeType}
                   </span>
                 ))}
               </div>

@@ -8,16 +8,49 @@ import AdminScoresPage from './pages/AdminScoresPage'
 import ReportPage from './pages/ReportPage'
 
 const PROJECTS = [
-  { label: '🎮 Сесії', href: 'http://localhost:3001', port: 3001 },
-  { label: '🃏 Картки', href: 'http://localhost:3002', port: 3002 },
-  { label: '🏆 Бали & Форми', href: 'http://localhost:3003', port: 3003 },
+  { label: 'Сесії', href: 'http://localhost:3001', port: 3001 },
+  { label: 'Картки', href: 'http://localhost:3002', port: 3002 },
+  { label: 'Бали & Форми', href: 'http://localhost:3003', port: 3003 },
 ]
 
 const navItems = [
-  { path: '/', label: '🏆 Лідерборд', exact: true },
-  { path: '/forms', label: '📝 Форми' },
-  { path: '/admin', label: '⚙️ Адмін' },
-  { path: '/report', label: '📊 Звіт' },
+  { 
+    path: '/', 
+    label: 'Лідерборд', 
+    exact: true,
+    icon: (
+      <svg className="w-4 h-4 mr-1.5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+      </svg>
+    )
+  },
+  { 
+    path: '/forms', 
+    label: 'Форми',
+    icon: (
+      <svg className="w-4 h-4 mr-1.5 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+    )
+  },
+  { 
+    path: '/admin', 
+    label: 'Адмін',
+    icon: (
+      <svg className="w-4 h-4 mr-1.5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+      </svg>
+    )
+  },
+  { 
+    path: '/report', 
+    label: 'Звіт',
+    icon: (
+      <svg className="w-4 h-4 mr-1.5 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+    )
+  },
 ]
 
 export default function App() {
@@ -65,12 +98,13 @@ export default function App() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 flex items-center justify-center ${
                     isNavActive(item)
                       ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
+                  {item.icon}
                   {item.label}
                 </Link>
               ))}

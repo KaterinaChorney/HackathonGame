@@ -1,0 +1,73 @@
+﻿<USER_REQUEST>
+cat << 'SCRIPT_END' > /home/claude/build_doc.js
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType,
+  ShadingType, VerticalAlign, PageNumber, PageBreak, TabStopType,
+  TabStopPosition, LevelFormat, TableOfContents
+} = require('docx');
+const fs = require('fs');
+
+// ---- helpers ----
+function bold(text, size=24) {
+  return new TextRun({ text, bold: true, font: "Times New Roman", size });
+}
+function normal(text, size=24) {
+  return new TextRun({ text, font: "Times New Roman", size });
+}
+function italic(text, size=24) {
+  return new TextRun({ text, italics: true, font: "Times New Roman", size });
+}
+function boldItalic(text, size=24) {
+  return new TextRun({ text, bold: true, italics: true, font: "Times New Roman", size });
+}
+
+// Paragraph helpers
+function centeredBold(text, size=24) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { line: 360, after: 0 },
+    children: [bold(text, size)]
+  });
+}
+function centeredNormal(text, size=24) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { line: 360, after: 0 },
+    children: [normal(text, size)]
+  });
+}
+function centeredItalic(text, size=24) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { line: 360, after: 0 },
+    children: [italic(text, size)]
+  });
+}
+function bodyPara(text, spacing={line:480, before:0, after:0}) {
+  return new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
+    indent: { firstLine: 720 },
+    spacing,
+    children: [normal(text)]
+  });
+}
+function bodyParaRuns(runs, spacing={line:480, before:0, after:0}) {
+  return new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
+    indent: { firstLine: 720 },
+    spacing,
+    children: runs
+  });
+}
+function noIndentPara(text, spacing={line:480, before:0, after:0}) {
+  return new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
+    spacing,
+    chi
+<truncated 45216 bytes>
+С– СЂРѕР·СЂРѕР±РєРё РІР»Р°СЃРЅРѕС— СЃРёСЃС‚РµРјРё С‚Р° РІРёР·РЅР°С‡РµРЅРЅСЏ РєРѕРЅРєСѓСЂРµРЅС‚РЅРёС… РїРµСЂРµРІР°Рі. РЈ С…РѕРґС– Р°РЅР°Р»С–Р·Сѓ РїСЂРµРґРјРµС‚РЅРѕС— РѕР±Р»Р°СЃС‚С– РґРѕСЃР»С–РґР¶РµРЅРѕ С‡РѕС‚РёСЂРё РєР°С‚РµРіРѕСЂС–С— СЃРёСЃС‚РµРј-Р°РЅР°Р»РѕРіС–РІ: РїР»Р°С‚С„РѕСЂРјРё РґР»СЏ e-sports С‚СѓСЂРЅС–СЂС–РІ, РїР»Р°С‚С„РѕСЂРјРё РґР»СЏ С…Р°РєР°С‚РѕРЅС–РІ, СЃРёСЃС‚РµРјРё СѓРїСЂР°РІР»С–РЅРЅСЏ Р·РјР°РіР°РЅРЅСЏРјРё С‚Р° СѓРЅС–РІРµСЂСЃРёС‚РµС‚СЃСЊРєС– LMS С–Р· С„СѓРЅРєС†С–СЏРјРё РіРµР№РјС–С„С–РєР°С†С–С—.",
+  "Battlefy С” РїСЂРѕРІС–РґРЅРѕСЋ РїР»Р°С‚С„РѕСЂРјРѕСЋ РґР»СЏ РѕСЂРіР°РЅС–Р·Р°С†С–С— e-sports С‚СѓСЂРЅС–СЂС–РІ С– РѕРґРЅС–С”СЋ Р· РЅР°Р№Р±С–Р»СЊС€ С„СѓРЅРєС†С–РѕРЅР°Р»СЊРЅРѕ СЂРѕР·РІРёРЅРµРЅРёС… СЃРёСЃС‚РµРј Сѓ СЃРІРѕС—Р№ РєР°С‚РµРіРѕСЂС–С—. РџР»Р°С‚С„РѕСЂРјР° Р·Р°Р±РµР·РїРµС‡СѓС” РєРѕРјРїР»РµРєСЃРЅРµ СѓРїСЂР°РІР»С–РЅРЅСЏ С‚СѓСЂРЅС–СЂРЅРёРјРё СЃС–С‚РєР°РјРё, Р°РІС‚РѕРјР°С‚РёС‡РЅРёР№ РїС–РґСЂР°С…СѓРЅРѕРє СЂРµР·СѓР»СЊС‚Р°С‚С–РІ С– РІС–РґРѕР±СЂР°Р¶РµРЅРЅСЏ СЂРµР№С‚РёРЅРіСѓ. РЎРёР»СЊРЅС– СЃС‚РѕСЂРѕРЅРё: Р·СЂС–Р»РёР№, РґРѕР±СЂРµ РїСЂРѕС‚РµСЃС‚РѕРІР°РЅРёР№ РїСЂРѕРґСѓРєС‚ Р· С€РёСЂРѕРєРёРј С„СѓРЅРєС†С–РѕРЅР°Р»РѕРј; РїС–РґС‚СЂРёРјРєР° СЂС–Р·РЅРёС… С„РѕСЂРјР°С‚С–РІ С‚СѓСЂРЅС–СЂС–РІ (Swiss, Single/Double Elimination, Round Robin); РјР°СЃС€С‚Р°Р±РѕРІР°РЅС–СЃС‚СЊ РґР»СЏ РІРµР»РёРєРѕС— РєС–Р»СЊРєРѕСЃС‚С– СѓС‡Р°СЃРЅРёРєС–РІ; РјРѕР±С–Р»СЊРЅР° РґРѕСЃС‚СѓРїРЅС–СЃС‚СЊ. РЎР»Р°Р±РєС– СЃС‚РѕСЂРѕРЅРё: Р·Р°РєСЂРёС‚РёР№ API Р±РµР· РјРѕР¶Р»РёРІРѕСЃС‚С– С–РЅС‚РµРіСЂР°С†С–С— Р· РІР»Р°СЃРЅРёРјРё СЃРёСЃС‚РµРјР°РјРё; РїРѕРІРЅР° РІС–РґСЃСѓС‚РЅС–СЃС‚СЊ РјРµС…Р°РЅС–Р·РјС–РІ РіРµР№РјС–С„С–РєР°С†С–С— (Р±РµР№РґР¶С–РІ, РєР°СЃС‚РѕРјРЅРёС… РјРµС‚СЂРёРє); Р·РѕСЂС–С”РЅС‚РѕРІР°РЅС–СЃС‚СЊ РІРёРєР»СЋС‡РЅРѕ РЅР° e-sports Р· С„С–РєСЃРѕРІР°РЅРѕСЋ СЃС‚СЂСѓРєС‚СѓСЂРѕСЋ СЂР°СѓРЅРґС–РІ; РЅРµРјРѕР¶Р»РёРІС–СЃС‚СЊ РєР°СЃС‚РѕРјС–Р·Р°С†С–С— СЃРёСЃС‚РµРјРё РѕС†С–РЅСЋРІР°РЅРЅСЏ; РІС–РґСЃСѓС‚РЅС–СЃС‚СЊ РїС–РґС‚
+<truncated 163155 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.

@@ -2,6 +2,14 @@ import axios from 'axios'
 
 const api = axios.create({ baseURL: '/api' })
 
+api.interceptors.request.use(config => {
+  const token = sessionStorage.getItem('admin_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 export const scoresApi = {
   // Scores
   getLeaderboard: (sessionId) => api.get(`/scores/${sessionId}`),
@@ -18,6 +26,10 @@ export const scoresApi = {
   // Export
   exportHistoryCsv: (sessionId) => `/api/export/${sessionId}/history/csv`,
   exportLeaderboardCsv: (sessionId) => `/api/export/${sessionId}/leaderboard/csv`,
+
+  // Auth
+  login: (password) => api.post('/auth/login', { password }),
+  logout: () => api.post('/auth/logout'),
 }
 
 export default scoresApi
