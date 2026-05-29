@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using HackathonGame.ScoresService.Data;
-using HackathonGame.ScoresService.Models;
 using HackathonGame.ScoresService.DTOs;
+using HackathonGame.ScoresService.Services;
 using Microsoft.AspNetCore.SignalR;
 using HackathonGame.ScoresService.Hubs;
 
@@ -12,128 +10,43 @@ namespace HackathonGame.ScoresService.Controllers;
 [Route("api/badges")]
 public class BadgesController : ControllerBase
 {
-    private readonly ScoresDbContext _db;
+    private readonly IBadgesService _badgesService;
     private readonly IHubContext<LeaderboardHub> _hubContext;
 
-    public BadgesController(ScoresDbContext db, IHubContext<LeaderboardHub> hubContext)
+    public BadgesController(IBadgesService badgesService, IHubContext<LeaderboardHub> hubContext)
     {
-        _db = db;
-        _hubContext = hubContext;
+        _badgesService = badgesService;
+        _hubContext    = hubContext;
     }
-
-    private static readonly List<BadgeTypeInfo> BadgeTypes = new()
-    {
-        new() { Type = "innovator", Name = "Інноватор", Description = "За найкреативніше рішення", Icon = "💡", DefaultPoints = 10 },
-        new() { Type = "speedster", Name = "Швидкий", Description = "Перша команда що завершила раунд", Icon = "⚡", DefaultPoints = 5 },
-        new() { Type = "presenter", Name = "Оратор", Description = "За найкращу презентацію", Icon = "🎤", DefaultPoints = 10 },
-        new() { Type = "teamwork", Name = "Командний гравець", Description = "За найкращу командну роботу", Icon = "🤝", DefaultPoints = 5 },
-        new() { Type = "problem_solver", Name = "Проблемний вирішувач", Description = "За найкращий Problem Canvas", Icon = "🧩", DefaultPoints = 10 },
-        new() { Type = "creative", Name = "Креативник", Description = "За найкращі Crazy 8s ідеї", Icon = "🎨", DefaultPoints = 10 },
-        new() { Type = "survivor", Name = "Виживач", Description = "Зберегли всі токени життя", Icon = "🛡️", DefaultPoints = 15 },
-        new() { Type = "mvp", Name = "MVP", Description = "Найцінніший гравець сесії", Icon = "🏆", DefaultPoints = 20 }
-    };
 
     // GET /api/badges/types — Badge types list
     [HttpGet("types")]
     public ActionResult<List<BadgeTypeInfo>> GetBadgeTypes()
     {
-        return Ok(BadgeTypes);
+        return Ok(_badgesService.GetBadgeTypes());
     }
 
     // GET /api/badges/{sessionId} — All session badges
     [HttpGet("{sessionId}")]
     public async Task<ActionResult<List<BadgeResponse>>> GetSessionBadges(string sessionId)
     {
-        var badges = await _db.Badges
-            .Where(b => b.SessionId == sessionId)
-            .OrderByDescending(b => b.AwardedAt)
-            .ToListAsync();
-
-        return Ok(badges.Select(MapBadge));
+        var badges = await _badgesService.GetSessionBadgesAsync(sessionId);
+        return Ok(badges);
     }
 
     // POST /api/badges/{sessionId}/team/{teamId} — Award badge
     [HttpPost("{sessionId}/team/{teamId}")]
     public async Task<ActionResult<BadgeResponse>> AwardBadge(string sessionId, long teamId, [FromBody] AwardBadgeRequest request)
     {
-        var badgeType = BadgeTypes.FirstOrDefault(bt => bt.Type == request.BadgeType);
-        int bonusPoints = request.BonusPoints > 0 ? request.BonusPoints : (badgeType?.DefaultPoints ?? 5);
+        var badge = await _badgesService.AwardBadgeAsync(sessionId, teamId, request);
 
-        // Also add bonus points to score
-        var score = await _db.Scores
-            .FirstOrDefaultAsync(s => s.SessionId == sessionId && s.TeamId == teamId);
-
-        if (score == null)
-        {
-            score = new Score { SessionId = sessionId, TeamId = teamId, TotalScore = 0 };
-            _db.Scores.Add(score);
-            await _db.SaveChangesAsync();
-        }
-
-        var badge = new Badge
-        {
-            SessionId = sessionId,
-            TeamId = teamId,
-            BadgeType = request.BadgeType,
-            BonusPoints = bonusPoints,
-            AwardedAt = DateTime.UtcNow,
-            ScoreId = score.Id // Fixed: set correct foreign key
-        };
-        _db.Badges.Add(badge);
-
-        score.TotalScore += bonusPoints;
-        score.UpdatedAt = DateTime.UtcNow;
-
-        var history = new ScoreHistory
-        {
-            ScoreId = score.Id,
-            Round = 0,
-            Points = bonusPoints,
-            Reason = $"Бейдж: {badgeType?.Name ?? request.BadgeType}",
-            CreatedBy = "admin",
-            CreatedAt = DateTime.UtcNow
-        };
-        _db.ScoreHistory.Add(history);
-
-        await _db.SaveChangesAsync();
-
-        // Broadcast real-time score update with newly awarded badges
-        var updatedScore = await _db.Scores
-            .Include(s => s.Badges)
-            .FirstOrDefaultAsync(s => s.Id == score.Id);
-
+        // Після видачі бейджу — отримуємо оновлений стан рахунку для SignalR broadcast
+        var updatedScore = await _badgesService.GetScoreWithBadgesAsync(sessionId, teamId);
         if (updatedScore != null)
         {
-            var responseScore = new ScoreResponse
-            {
-                Id = updatedScore.Id,
-                SessionId = updatedScore.SessionId,
-                TeamId = updatedScore.TeamId,
-                TotalScore = updatedScore.TotalScore,
-                UpdatedAt = updatedScore.UpdatedAt,
-                Badges = updatedScore.Badges.Select(b => new BadgeResponse
-                {
-                    Id = b.Id,
-                    SessionId = b.SessionId,
-                    TeamId = b.TeamId,
-                    BadgeType = b.BadgeType,
-                    BonusPoints = b.BonusPoints,
-                    AwardedAt = b.AwardedAt
-                }).ToList()
-            };
-            await _hubContext.Clients.Group(sessionId).SendAsync("ReceiveScoreUpdate", responseScore);
+            await _hubContext.Clients.Group(sessionId).SendAsync("ReceiveScoreUpdate", updatedScore);
         }
 
-        return Ok(MapBadge(badge));
+        return Ok(badge);
     }
-
-    private static BadgeResponse MapBadge(Badge b) => new()
-    {
-        Id = b.Id,
-        SessionId = b.SessionId,
-        TeamId = b.TeamId,
-        BadgeType = b.BadgeType,
-        BonusPoints = b.BonusPoints,
-        AwardedAt = b.AwardedAt
-    };
 }

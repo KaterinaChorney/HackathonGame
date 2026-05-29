@@ -32,6 +32,12 @@ builder.Services.AddHttpClient<ICardsIntegrationService, CardsIntegrationService
     }
 });
 
+// Business logic services (Service Layer)
+builder.Services.AddScoped<IScoresService, ScoresService>();
+builder.Services.AddScoped<IBadgesService, BadgesService>();
+builder.Services.AddScoped<IFormsService, FormsService>();
+builder.Services.AddScoped<IExportService, ExportService>();
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
