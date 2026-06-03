@@ -8,6 +8,8 @@ function DrawingCanvas({ value, onChange, disabled }) {
   const [isDrawing, setIsDrawing] = useState(false)
   const isLoadedRef = useRef(false)
 
+  const lastDrawnValueRef = useRef(null)
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -17,18 +19,18 @@ function DrawingCanvas({ value, onChange, disabled }) {
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
 
-    // Only draw the initial value once
-    if (value && value.startsWith('data:image/') && !isLoadedRef.current) {
-      const img = new Image()
-      img.onload = () => {
+    if (value !== lastDrawnValueRef.current) {
+      if (value && value.startsWith('data:image/')) {
+        const img = new Image()
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          ctx.drawImage(img, 0, 0)
+        }
+        img.src = value
+      } else if (!value) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(img, 0, 0)
-        isLoadedRef.current = true
       }
-      img.src = value
-    } else if (!value) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      isLoadedRef.current = true
+      lastDrawnValueRef.current = value
     }
   }, [value])
 
@@ -75,7 +77,9 @@ function DrawingCanvas({ value, onChange, disabled }) {
     setIsDrawing(false)
     const canvas = canvasRef.current
     if (canvas) {
-      onChange(canvas.toDataURL())
+      const newVal = canvas.toDataURL()
+      lastDrawnValueRef.current = newVal
+      onChange(newVal)
     }
   }
 
@@ -85,6 +89,7 @@ function DrawingCanvas({ value, onChange, disabled }) {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+    lastDrawnValueRef.current = ''
     onChange('')
   }
 
@@ -321,9 +326,9 @@ export default function Crazy8sPage() {
       <div className="text-center">
         <h1 className="font-cyber text-3xl text-neon-pink mb-1">CRAZY 8s</h1>
         <p className="text-gray-400 text-sm">8 ідей за 8 хвилин · Команда #{teamId}</p>
-        {globalTimeLeft !== null && (
-          <p className="text-gray-500 text-xs mt-1">Глобальний час (P1): {formatTime(globalTimeLeft)}</p>
-        )}
+        <p className="text-gray-500 text-xs mt-1">
+          Глобальний час (P1): {globalTimeLeft !== null ? formatTime(globalTimeLeft) : 'не запущено / пауза'}
+        </p>
       </div>
 
       {/* Timer */}
