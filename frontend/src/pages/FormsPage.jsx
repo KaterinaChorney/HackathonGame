@@ -71,6 +71,25 @@ export default function FormsPage() {
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {FORM_TYPES.map(ft => {
             const existing = forms.find(f => f.formType === ft.type)
+            let isFilled = false;
+            if (existing && existing.data) {
+              try {
+                const parsed = JSON.parse(existing.data);
+                if (ft.type === 'PROBLEM_CANVAS') {
+                  isFilled = Object.values(parsed).some(v => v && typeof v === 'string' && v.trim() !== '');
+                } else if (ft.type === 'CRAZY_8S') {
+                  isFilled = parsed.ideas && parsed.ideas.some(idea => 
+                    (idea.text && idea.text.trim() !== '') || 
+                    (idea.drawing && idea.drawing.trim() !== '')
+                  );
+                } else {
+                  isFilled = true;
+                }
+              } catch(e) {
+                isFilled = false;
+              }
+            }
+
             return (
               <div key={ft.type} className="card-cyber hover:border-neon-pink/50 cursor-pointer group"
                    onClick={() => navigate(`/forms/${ft.route}/${sessionId}/${teamId}`)}>
@@ -78,7 +97,7 @@ export default function FormsPage() {
                   {ft.name}
                 </h3>
                 <p className="text-gray-400 text-sm mb-4">{ft.desc}</p>
-                {existing ? (
+                {isFilled ? (
                   <span className="text-xs px-3 py-1 bg-neon-green/20 text-neon-green rounded-full border border-neon-green/30">
                     ✓ Заповнено
                   </span>

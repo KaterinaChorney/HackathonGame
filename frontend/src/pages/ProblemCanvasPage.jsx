@@ -64,8 +64,15 @@ export default function ProblemCanvasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Link to={`/forms?session=${sessionId}&team=${teamId}`} className="text-gray-400 hover:text-neon-cyan text-sm">← Назад</Link>
-        <div className="text-sm">
-          {saving && <span className="text-yellow-400">💾 Збереження...</span>}
+        <div className="text-sm flex items-center gap-2">
+          {saving && (
+            <span className="text-yellow-400 flex items-center gap-1">
+              <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+              </svg>
+              Збереження...
+            </span>
+          )}
           {saved && !saving && <span className="text-neon-green">✓ Збережено</span>}
         </div>
       </div>
