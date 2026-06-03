@@ -149,53 +149,57 @@ export default function Crazy8sPage() {
   
   const [timerState, setTimerState] = useState(() => {
     const saved = localStorage.getItem(storageKey)
-    return saved ? JSON.parse(saved) : null
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (typeof parsed.localRef === 'number') return parsed
+      } catch (e) {}
+    }
+    return null
   })
-  
+
   const timerStateRef = useRef(timerState)
   useEffect(() => { timerStateRef.current = timerState }, [timerState])
 
-  const pendingStartRef = useRef(false)
-
+  const globalTimeLeftRef = useRef(globalTimeLeft)
+  useEffect(() => { globalTimeLeftRef.current = globalTimeLeft }, [globalTimeLeft])
+  
   useEffect(() => {
     sessionHubService.startConnection(sessionId)
     
     const handleTimerTick = ({ remaining }) => {
       setGlobalTimeLeft(remaining)
 
-      let currentState = timerStateRef.current
-      
-      if (!currentState && pendingStartRef.current) {
-        currentState = {
-          p1Ref: remaining,
-          localRef: 480
+      if (timerStateRef.current) {
+        const currentState = timerStateRef.current;
+        
+        if (currentState.p1Ref === null) {
+           const newState = { ...currentState, p1Ref: remaining };
+           localStorage.setItem(storageKey, JSON.stringify(newState));
+           setTimerState(newState);
+           return;
         }
-        localStorage.setItem(storageKey, JSON.stringify(currentState))
-        setTimerState(currentState)
-        setTimeLeft(480)
-        pendingStartRef.current = false
-        return;
-      }
 
-      if (currentState) {
         const elapsed = currentState.p1Ref - remaining;
         
-        if (elapsed !== 0) {
+        if (elapsed > 0) {
           let newLocal = currentState.localRef - elapsed;
-          
           if (newLocal > 480) newLocal = 480;
           if (newLocal < 0) newLocal = 0;
           
           const newState = {
             p1Ref: remaining,
-            localRef: newLocal
+            localRef: newLocal,
+            lastLocalUpdate: Date.now()
           };
           
           localStorage.setItem(storageKey, JSON.stringify(newState))
           setTimerState(newState)
           setTimeLeft(newLocal)
         } else {
-          setTimeLeft(currentState.localRef)
+          const newState = { ...currentState, p1Ref: remaining, lastLocalUpdate: Date.now() };
+          localStorage.setItem(storageKey, JSON.stringify(newState));
+          setTimerState(newState);
         }
       }
     }
@@ -208,8 +212,53 @@ export default function Crazy8sPage() {
     }
   }, [sessionId, teamId])
 
+  useEffect(() => {
+    if (!timerState) return;
+
+    if (timerState.p1Ref !== null) {
+      setTimeLeft(timerState.localRef);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const elapsedSec = Math.floor((now - timerState.lastLocalUpdate) / 1000);
+      
+      if (elapsedSec > 0) {
+        let newLocal = timerState.localRef - elapsedSec;
+        if (newLocal < 0) newLocal = 0;
+        
+        const newState = {
+          ...timerState,
+          localRef: newLocal,
+          lastLocalUpdate: now
+        };
+        
+        localStorage.setItem(storageKey, JSON.stringify(newState));
+        setTimerState(newState);
+        setTimeLeft(newLocal);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerState, storageKey]);
+
   const startLocalTimer = () => {
-    pendingStartRef.current = true;
+    let startLocal = 480;
+    const currentGlobal = globalTimeLeftRef.current;
+    if (currentGlobal !== null && currentGlobal < 480) {
+      startLocal = currentGlobal;
+    }
+    
+    const newState = {
+      p1Ref: currentGlobal,
+      localRef: startLocal,
+      lastLocalUpdate: Date.now()
+    };
+    
+    localStorage.setItem(storageKey, JSON.stringify(newState));
+    setTimerState(newState);
+    setTimeLeft(startLocal);
   }
 
   const isTimeUp = timerState !== null && timeLeft === 0;
@@ -247,10 +296,8 @@ export default function Crazy8sPage() {
 
   const handleBack = async (e) => {
     e.preventDefault()
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
-      await autoSave(ideas)
-    }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    await autoSave(ideas)
     navigate(`/forms?session=${sessionId}&team=${teamId}`)
   }
 
